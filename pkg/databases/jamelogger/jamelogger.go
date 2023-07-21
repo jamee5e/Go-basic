@@ -52,7 +52,7 @@ func (l *jameLogger) Print() IjameLogger {
 func (l *jameLogger) Save() {
 	data := utils.Output(l)
 
-	filename := fmt.Sprintf("./assets/jamelogger_%v.txt", strings.ReplaceAll(time.Now().Format("2006-01-02"), "-", ""))
+	filename := fmt.Sprintf("./assets/logs/jamelogger_%v.txt ", strings.ReplaceAll(time.Now().Format("2006-01-02"), "-", ""))
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
