@@ -1,10 +1,12 @@
 package middlewaresHandlers
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/jamee5e/jame-shop-tutorial/config"
 	"github.com/jamee5e/jame-shop-tutorial/modules/entities"
@@ -20,6 +22,7 @@ const (
 	jwtAuthErr     middlewaresHandlersErrcode = "middlware-002"
 	paramsCheckErr middlewaresHandlersErrcode = "middlware-003"
 	authorizeErr   middlewaresHandlersErrcode = "middlware-004"
+	apiKeyErr      middlewaresHandlersErrcode = "middlware-005"
 )
 
 type IMiddlewaresHandler interface {
@@ -29,6 +32,7 @@ type IMiddlewaresHandler interface {
 	JwtAuth() fiber.Handler
 	ParamsCheck() fiber.Handler
 	Authorize(expectRoleId ...int) fiber.Handler
+	ApiKeyAuth() fiber.Handler
 }
 
 type middlewaresHandler struct {
@@ -160,4 +164,25 @@ func (h *middlewaresHandler) Authorize(expectRoleId ...int) fiber.Handler {
 			"no permission to access",
 		).Res()
 	}
+}
+
+func (h *middlewaresHandler) ApiKeyAuth() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		key := c.Get("X-Api-Key")
+		if _, err := jameauth.ParseApiKey(h.cfg.Jwt(), key); err != nil {
+			return entities.NewResponse(c).Error(
+				fiber.ErrUnauthorized.Code,
+				string(apiKeyErr),
+				"apikey is invalid or required",
+			).Res()
+		}
+		return c.Next()
+	}
+}
+
+// Streaming file
+func (h *middlewaresHandler) StreamingFile() fiber.Handler {
+	return filesystem.New(filesystem.Config{
+		Root: http.Dir("./assets/images"),
+	})
 }
