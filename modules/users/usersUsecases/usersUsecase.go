@@ -15,6 +15,8 @@ type IUsersUsecase interface {
 	GetPassport(req *users.UserCredential) (*users.UserPassport, error)
 	RefreshPassport(req *users.UserRefreshCredential) (*users.UserPassport, error)
 	DeleteOauth(oauthId string) error
+	InsertAdmin(req *users.UserRegisterReq) (*users.UserPassport, error)
+	GetUserProfile(userId string) (*users.User, error)
 }
 
 type usersUsecase struct {
