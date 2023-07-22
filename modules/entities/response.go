@@ -2,7 +2,7 @@ package entities
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/jamee5e/jame-shop-tutorial/pkg/databases/jamelogger"
+	"github.com/jamee5e/jame-shop-tutorial/pkg/jamelogger"
 )
 
 type IResponse interface {

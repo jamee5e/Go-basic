@@ -6,10 +6,14 @@ import (
 	"github.com/jamee5e/jame-shop-tutorial/modules/middlewares/middlewaresRepositories"
 	"github.com/jamee5e/jame-shop-tutorial/modules/middlewares/middlewaresUsecases"
 	"github.com/jamee5e/jame-shop-tutorial/modules/monitor/monitorHandlers"
+	"github.com/jamee5e/jame-shop-tutorial/modules/users/userHandlers"
+	"github.com/jamee5e/jame-shop-tutorial/modules/users/usersRepositories"
+	"github.com/jamee5e/jame-shop-tutorial/modules/users/usersUsecases"
 )
 
 type IModuleFactory interface {
 	MonitorModule()
+	UsersModule()
 }
 
 type moduleFactory struct {
@@ -36,4 +40,21 @@ func (m *moduleFactory) MonitorModule() {
 	handler := monitorHandlers.MonitorHandler(m.server.cfg)
 
 	m.router.Get("/", handler.HealthCheck)
+}
+
+func (m *moduleFactory) UsersModule() {
+	repository := usersRepositories.UsersRepository(m.server.db)
+	usecase := usersUsecases.UsersUsecase(m.server.cfg, repository)
+	handler := userHandlers.UserHandler(m.server.cfg, usecase)
+
+	router := m.router.Group("/users")
+
+	router.Post("/signup", handler.SignUpCustomer)
+	router.Post("/signin", handler.SignIn)
+	router.Post("/refresh", handler.RefreshPassport)
+	router.Post("/signout", handler.SignOut)
+	router.Post("/signup-admin", m.mid.JwtAuth(), m.mid.Authorize(2), handler.SignUpAdmin)
+
+	router.Get("/:user_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), handler.GetUserProfile)
+	router.Get("/admin/secret", m.mid.JwtAuth(), m.mid.Authorize(2), handler.GenerateAdminToken)
 }
