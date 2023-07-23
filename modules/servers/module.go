@@ -9,6 +9,9 @@ import (
 	"github.com/jamee5e/jame-shop-tutorial/modules/middlewares/middlewaresRepositories"
 	"github.com/jamee5e/jame-shop-tutorial/modules/middlewares/middlewaresUsecases"
 	"github.com/jamee5e/jame-shop-tutorial/modules/monitor/monitorHandlers"
+	"github.com/jamee5e/jame-shop-tutorial/modules/orders/ordersHandlers"
+	"github.com/jamee5e/jame-shop-tutorial/modules/orders/ordersRepositories"
+	"github.com/jamee5e/jame-shop-tutorial/modules/orders/ordersUsecases"
 	"github.com/jamee5e/jame-shop-tutorial/modules/users/userHandlers"
 	"github.com/jamee5e/jame-shop-tutorial/modules/users/usersRepositories"
 	"github.com/jamee5e/jame-shop-tutorial/modules/users/usersUsecases"
@@ -18,6 +21,9 @@ type IModuleFactory interface {
 	MonitorModule()
 	UsersModule()
 	AppinfoModule()
+	FilesModule() IFilesModule
+	ProductsModule() IProductsModule
+	OrdersModule()
 }
 
 type moduleFactory struct {
@@ -75,4 +81,19 @@ func (m *moduleFactory) AppinfoModule() {
 	router.Get("/apikey", m.mid.JwtAuth(), m.mid.Authorize(2), handler.GenerateApiKey)
 
 	router.Delete("/:category_id/categories", m.mid.JwtAuth(), m.mid.Authorize(2), handler.RemoveCategory)
+}
+
+func (m *moduleFactory) OrdersModule() {
+	ordersRepository := ordersRepositories.OrdersRepository(m.server.db)
+	ordersUsecase := ordersUsecases.OrdersUsecase(ordersRepository, m.ProductsModule().Repository())
+	ordersHandler := ordersHandlers.OrdersHandler(m.server.cfg, ordersUsecase)
+
+	router := m.router.Group("/orders")
+
+	router.Post("/", m.mid.JwtAuth(), ordersHandler.InsertOrder)
+
+	router.Get("/", m.mid.JwtAuth(), m.mid.Authorize(2), ordersHandler.FindOrder)
+	router.Get("/:user_id/:order_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), ordersHandler.FindOneOrder)
+
+	router.Patch("/:user_id/:order_id", m.mid.JwtAuth(), m.mid.ParamsCheck(), ordersHandler.UpdateOrder)
 }

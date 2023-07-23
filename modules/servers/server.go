@@ -50,6 +50,9 @@ func (s *server) Start() {
 	modules.MonitorModule()
 	modules.UsersModule()
 	modules.AppinfoModule()
+	modules.FilesModule().Init()
+	modules.ProductsModule().Init()
+	modules.OrdersModule()
 
 	s.app.Use(middlewares.RouterCheck())
 
